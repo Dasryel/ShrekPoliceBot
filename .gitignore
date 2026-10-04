@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+config*.json
+*.session*
+*.sqlite3*
+media/
+*.log
+bot.pid
+bot.lock

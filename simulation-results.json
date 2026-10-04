@@ -1,0 +1,175 @@
+{
+  "assumptions": {
+    "destination": "supergroup",
+    "send_spacing_seconds": 3.1,
+    "latency_per_request_seconds": 0.3,
+    "scheduler_overhead_seconds": 0.1,
+    "check_interval_seconds": 30,
+    "confirmation_delay_seconds": 3,
+    "trials_per_scenario": 30,
+    "cohort": "regular arrivals, original expiry enforced; delete one random eligible message after 3 tracking windows of warmup",
+    "exclusions": "No 429s, outages, bursts, unsupported messages, or concurrent deletions. This models queue capacity, not actual Telegram throttling. Response statistics include detected trials only."
+  },
+  "scenarios": [
+    {
+      "messages_per_minute": 0.5,
+      "tracking_minutes": 20,
+      "active_messages": 10,
+      "estimated_round_seconds": 38.0,
+      "detected_trials": 30,
+      "total_trials": 30,
+      "simulated_mean_response_seconds": 42.5,
+      "simulated_p95_response_seconds": 63.9
+    },
+    {
+      "messages_per_minute": 0.5,
+      "tracking_minutes": 60,
+      "active_messages": 30,
+      "estimated_round_seconds": 114.0,
+      "detected_trials": 30,
+      "total_trials": 30,
+      "simulated_mean_response_seconds": 234.0,
+      "simulated_p95_response_seconds": 284.3
+    },
+    {
+      "messages_per_minute": 0.5,
+      "tracking_minutes": 180,
+      "active_messages": 90,
+      "estimated_round_seconds": 342.0,
+      "detected_trials": 30,
+      "total_trials": 30,
+      "simulated_mean_response_seconds": 816.2,
+      "simulated_p95_response_seconds": 960.7
+    },
+    {
+      "messages_per_minute": 0.5,
+      "tracking_minutes": 1440,
+      "active_messages": 720,
+      "estimated_round_seconds": 2736.0,
+      "detected_trials": 30,
+      "total_trials": 30,
+      "simulated_mean_response_seconds": 6812.2,
+      "simulated_p95_response_seconds": 8021.1
+    },
+    {
+      "messages_per_minute": 1,
+      "tracking_minutes": 20,
+      "active_messages": 20,
+      "estimated_round_seconds": 76.0,
+      "detected_trials": 29,
+      "total_trials": 30,
+      "simulated_mean_response_seconds": 130.9,
+      "simulated_p95_response_seconds": 158.9
+    },
+    {
+      "messages_per_minute": 1,
+      "tracking_minutes": 60,
+      "active_messages": 60,
+      "estimated_round_seconds": 228.0,
+      "detected_trials": 29,
+      "total_trials": 30,
+      "simulated_mean_response_seconds": 510.6,
+      "simulated_p95_response_seconds": 611.1
+    },
+    {
+      "messages_per_minute": 1,
+      "tracking_minutes": 180,
+      "active_messages": 180,
+      "estimated_round_seconds": 684.0,
+      "detected_trials": 29,
+      "total_trials": 30,
+      "simulated_mean_response_seconds": 1658.2,
+      "simulated_p95_response_seconds": 1891.7
+    },
+    {
+      "messages_per_minute": 1,
+      "tracking_minutes": 1440,
+      "active_messages": 1440,
+      "estimated_round_seconds": 5472.0,
+      "detected_trials": 30,
+      "total_trials": 30,
+      "simulated_mean_response_seconds": 13721.6,
+      "simulated_p95_response_seconds": 15640.1
+    },
+    {
+      "messages_per_minute": 5,
+      "tracking_minutes": 20,
+      "active_messages": 100,
+      "estimated_round_seconds": 380.0,
+      "detected_trials": 19,
+      "total_trials": 30,
+      "simulated_mean_response_seconds": 717.9,
+      "simulated_p95_response_seconds": 846.7
+    },
+    {
+      "messages_per_minute": 5,
+      "tracking_minutes": 60,
+      "active_messages": 300,
+      "estimated_round_seconds": 1140.0,
+      "detected_trials": 20,
+      "total_trials": 30,
+      "simulated_mean_response_seconds": 2172.0,
+      "simulated_p95_response_seconds": 2450.3
+    },
+    {
+      "messages_per_minute": 5,
+      "tracking_minutes": 180,
+      "active_messages": 900,
+      "estimated_round_seconds": 3420.0,
+      "detected_trials": 23,
+      "total_trials": 30,
+      "simulated_mean_response_seconds": 6883.7,
+      "simulated_p95_response_seconds": 7899.5
+    },
+    {
+      "messages_per_minute": 5,
+      "tracking_minutes": 1440,
+      "active_messages": 7200,
+      "estimated_round_seconds": 27360.0,
+      "detected_trials": 21,
+      "total_trials": 30,
+      "simulated_mean_response_seconds": 53584.9,
+      "simulated_p95_response_seconds": 62889.3
+    },
+    {
+      "messages_per_minute": 10,
+      "tracking_minutes": 20,
+      "active_messages": 200,
+      "estimated_round_seconds": 760.0,
+      "detected_trials": 11,
+      "total_trials": 30,
+      "simulated_mean_response_seconds": 1445.7,
+      "simulated_p95_response_seconds": 1716.9
+    },
+    {
+      "messages_per_minute": 10,
+      "tracking_minutes": 60,
+      "active_messages": 600,
+      "estimated_round_seconds": 2280.0,
+      "detected_trials": 15,
+      "total_trials": 30,
+      "simulated_mean_response_seconds": 4306.2,
+      "simulated_p95_response_seconds": 4870.9
+    },
+    {
+      "messages_per_minute": 10,
+      "tracking_minutes": 180,
+      "active_messages": 1800,
+      "estimated_round_seconds": 6840.0,
+      "detected_trials": 14,
+      "total_trials": 30,
+      "simulated_mean_response_seconds": 13217.3,
+      "simulated_p95_response_seconds": 15598.3
+    },
+    {
+      "messages_per_minute": 10,
+      "tracking_minutes": 1440,
+      "active_messages": 14400,
+      "estimated_round_seconds": 54720.0,
+      "detected_trials": 14,
+      "total_trials": 30,
+      "simulated_mean_response_seconds": 109697.2,
+      "simulated_p95_response_seconds": 124160.5
+    }
+  ]
+}

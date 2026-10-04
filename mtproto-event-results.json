@@ -1,0 +1,1054 @@
+{
+  "mode": "bot MTProto",
+  "group_id": -1004435656905,
+  "reads": [
+    {
+      "label": "five-known-live-messages",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 5,
+      "existing_ids": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "empty_ids": [],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.083
+    },
+    {
+      "label": "range-up-to-20-ids",
+      "requested_ids": [
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 20,
+      "existing_ids": [
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "empty_ids": [
+        37
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.113
+    },
+    {
+      "label": "range-up-to-100-ids",
+      "requested_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 42,
+      "existing_ids": [
+        1,
+        5,
+        6,
+        7,
+        8,
+        11,
+        12,
+        13,
+        14,
+        18,
+        19,
+        20,
+        21,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "empty_ids": [
+        2,
+        3,
+        4,
+        9,
+        10,
+        15,
+        16,
+        17,
+        22,
+        37
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.294
+    },
+    {
+      "label": "range-up-to-200-ids",
+      "requested_ids": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 42,
+      "existing_ids": [
+        1,
+        5,
+        6,
+        7,
+        8,
+        11,
+        12,
+        13,
+        14,
+        18,
+        19,
+        20,
+        21,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36,
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "empty_ids": [
+        2,
+        3,
+        4,
+        9,
+        10,
+        15,
+        16,
+        17,
+        22,
+        37
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.125
+    },
+    {
+      "label": "mixed-live-and-deleted",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 5,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.087
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 5,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.084
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 5,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.083
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 5,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.099
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 5,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.092
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 5,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.081
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 5,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.087
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 5,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.081
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 5,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.087
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 5,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.102
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 5,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.083
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 5,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.132
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 5,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.129
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 5,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.176
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 5,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.141
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 5,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.162
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 5,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.146
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42
+      ],
+      "count": 5,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.158
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42,
+        43
+      ],
+      "count": 6,
+      "existing_ids": [
+        38,
+        41,
+        42,
+        43
+      ],
+      "empty_ids": [
+        39,
+        40
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.085
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42,
+        43
+      ],
+      "count": 6,
+      "existing_ids": [
+        38,
+        41,
+        42,
+        43
+      ],
+      "empty_ids": [
+        39,
+        40
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.086
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42,
+        43
+      ],
+      "count": 6,
+      "existing_ids": [
+        38,
+        41,
+        42,
+        43
+      ],
+      "empty_ids": [
+        39,
+        40
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.08
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42,
+        43
+      ],
+      "count": 6,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40,
+        43
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.09
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42,
+        43
+      ],
+      "count": 6,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40,
+        43
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.092
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42,
+        43
+      ],
+      "count": 6,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40,
+        43
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.102
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42,
+        43
+      ],
+      "count": 6,
+      "existing_ids": [
+        38,
+        41,
+        42
+      ],
+      "empty_ids": [
+        39,
+        40,
+        43
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.08
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44
+      ],
+      "count": 7,
+      "existing_ids": [
+        38,
+        41,
+        42,
+        44
+      ],
+      "empty_ids": [
+        39,
+        40,
+        43
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.105
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44
+      ],
+      "count": 7,
+      "existing_ids": [
+        38,
+        41,
+        42,
+        44
+      ],
+      "empty_ids": [
+        39,
+        40,
+        43
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.093
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44
+      ],
+      "count": 7,
+      "existing_ids": [
+        38,
+        41,
+        42,
+        44
+      ],
+      "empty_ids": [
+        39,
+        40,
+        43
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.097
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44
+      ],
+      "count": 7,
+      "existing_ids": [
+        38,
+        41,
+        42,
+        44
+      ],
+      "empty_ids": [
+        39,
+        40,
+        43
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.115
+    },
+    {
+      "label": "steady-read-and-human-message-check",
+      "requested_ids": [
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44
+      ],
+      "count": 7,
+      "existing_ids": [
+        38,
+        41,
+        42,
+        44
+      ],
+      "empty_ids": [
+        39,
+        40,
+        43
+      ],
+      "unreturned_ids": [],
+      "ok": true,
+      "elapsed_seconds": 0.114
+    }
+  ],
+  "delete_events": [
+    {
+      "chat_id": -1004435656905,
+      "ids": [
+        39,
+        40
+      ],
+      "own_test_ids": [
+        39,
+        40
+      ],
+      "latency_since_own_delete_request_seconds": {
+        "39": 38.47,
+        "40": 38.47
+      }
+    },
+    {
+      "chat_id": -1004435656905,
+      "ids": [
+        43
+      ],
+      "own_test_ids": [],
+      "latency_since_own_delete_request_seconds": {}
+    }
+  ],
+  "new_messages": [
+    {
+      "id": 43,
+      "from_self": false,
+      "sender_is_bot": false
+    },
+    {
+      "id": 44,
+      "from_self": false,
+      "sender_is_bot": false
+    }
+  ],
+  "tests": {
+    "entity_resolution": true,
+    "reads_own_live_messages": true,
+    "deleted_ids_return_empty": true,
+    "surviving_controls_present": true,
+    "own_delete_event_received": true,
+    "human_messages_seen": [
+      43,
+      44
+    ],
+    "non_self_deletion_event_ids": [
+      43
+    ]
+  },
+  "limits_note": "Short conservative test; cannot establish a guaranteed rate limit.",
+  "bot_username": "shrekpobot",
+  "median_read_seconds": 0.095,
+  "completed": true
+}

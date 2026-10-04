@@ -1,0 +1,120 @@
+{
+  "reads": [
+    {
+      "requested_count": 1,
+      "elapsed_seconds": 0.052,
+      "existing_count": 1,
+      "empty_count": 0,
+      "unreturned_count": 0,
+      "oldest_readable_normal_message_age_minutes": null
+    },
+    {
+      "requested_count": 20,
+      "elapsed_seconds": 0.072,
+      "existing_count": 12,
+      "empty_count": 8,
+      "unreturned_count": 0,
+      "oldest_readable_normal_message_age_minutes": 63.7
+    },
+    {
+      "requested_count": 100,
+      "elapsed_seconds": 0.102,
+      "existing_count": 30,
+      "empty_count": 70,
+      "unreturned_count": 0,
+      "oldest_readable_normal_message_age_minutes": 63.8
+    },
+    {
+      "requested_count": 200,
+      "elapsed_seconds": 0.092,
+      "existing_count": 30,
+      "empty_count": 170,
+      "unreturned_count": 0,
+      "oldest_readable_normal_message_age_minutes": 63.8
+    },
+    {
+      "requested_count": 200,
+      "elapsed_seconds": 0.115,
+      "existing_count": 30,
+      "empty_count": 170,
+      "unreturned_count": 0,
+      "oldest_readable_normal_message_age_minutes": 63.8
+    },
+    {
+      "requested_count": 200,
+      "elapsed_seconds": 0.107,
+      "existing_count": 30,
+      "empty_count": 170,
+      "unreturned_count": 0,
+      "oldest_readable_normal_message_age_minutes": 63.9
+    },
+    {
+      "requested_count": 200,
+      "elapsed_seconds": 0.119,
+      "existing_count": 30,
+      "empty_count": 170,
+      "unreturned_count": 0,
+      "oldest_readable_normal_message_age_minutes": 63.9
+    },
+    {
+      "requested_count": 200,
+      "elapsed_seconds": 0.1,
+      "existing_count": 30,
+      "empty_count": 170,
+      "unreturned_count": 0,
+      "oldest_readable_normal_message_age_minutes": 63.9
+    },
+    {
+      "requested_count": 200,
+      "elapsed_seconds": 0.095,
+      "existing_count": 30,
+      "empty_count": 170,
+      "unreturned_count": 0,
+      "oldest_readable_normal_message_age_minutes": 64.0
+    },
+    {
+      "requested_count": 200,
+      "elapsed_seconds": 0.085,
+      "existing_count": 30,
+      "empty_count": 170,
+      "unreturned_count": 0,
+      "oldest_readable_normal_message_age_minutes": 64.0
+    },
+    {
+      "requested_count": 200,
+      "elapsed_seconds": 0.086,
+      "existing_count": 30,
+      "empty_count": 170,
+      "unreturned_count": 0,
+      "oldest_readable_normal_message_age_minutes": 64.1
+    },
+    {
+      "requested_count": 200,
+      "elapsed_seconds": 0.101,
+      "existing_count": 30,
+      "empty_count": 170,
+      "unreturned_count": 0,
+      "oldest_readable_normal_message_age_minutes": 64.1
+    },
+    {
+      "requested_count": 200,
+      "elapsed_seconds": 0.093,
+      "existing_count": 30,
+      "empty_count": 170,
+      "unreturned_count": 0,
+      "oldest_readable_normal_message_age_minutes": 64.1
+    },
+    {
+      "requested_count": 200,
+      "elapsed_seconds": 0.094,
+      "existing_count": 30,
+      "empty_count": 170,
+      "unreturned_count": 0,
+      "oldest_readable_normal_message_age_minutes": 64.2
+    }
+  ],
+  "no_send_or_delete_operations": true,
+  "note": "Requests include unavailable and future IDs; this tests request size, not 200 live messages. Not a guaranteed quota test.",
+  "completed": true,
+  "median_read_seconds": 0.0945
+}

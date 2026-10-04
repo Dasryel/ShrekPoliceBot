@@ -1,0 +1,7 @@
+{
+  "fixture": "bot-owned diagnostic archived explicitly; human capture/edit tested separately",
+  "restored_seconds": 1.029,
+  "matching_restorations": 1,
+  "cached_document_reused": true,
+  "passed": true
+}
