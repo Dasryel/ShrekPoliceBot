@@ -123,10 +123,12 @@ class Bot:
                 log.info('Skipped protected message in %s',event.chat_id)
                 return
             file = None
+            previous_text = msg.message or ''
             if edit and self.archive.row(event.chat_id,msg.id):
                 # Never attach an older media file to newly edited media.
                 old = self.archive.row(event.chat_id,msg.id)
                 old_message = unpack(old[0])
+                previous_text = old_message.message or ''
                 if old_message.media != msg.media:
                     self.archive.db.execute('UPDATE messages SET file=NULL WHERE chat=? AND id=?',(event.chat_id,msg.id))
             name = '@'+sender.username if getattr(sender,'username',None) else utils.get_display_name(sender)
@@ -135,8 +137,17 @@ class Bot:
             log.info('Saved message %s in group %s',msg.id,event.chat_id)
             if msg.photo or msg.document:
                 self.spawn(self.save_media(event.chat_id,msg))
+            if edit:
+                edited_text = previous_text or (msg.message or '')
+                display = (utils.get_display_name(sender) or name).replace('\r',' ').replace('\n',' ')
+                username = name.replace('\r',' ').replace('\n',' ').replace('"',"'")
+                announcement = f'Kiinni jäit "{username}",'
+                if edited_text:
+                    announcement += f'\n\n{display}: {edited_text}'
+                await self.gif(event.chat_id,announcement,{})
+                log.info('Announced edit %s in group %s',msg.id,event.chat_id)
         except Exception as error:
-            log.warning('Incoming message processing failed (%s)',type(error).__name__)
+            log.exception('Incoming message processing failed')
     async def save_media(self, chat, msg):
         async with self.media_limit:
             try:
@@ -244,6 +255,8 @@ class Bot:
         label = f'Kiinni jäit "{name}",'
         display_name = (display_name or name).replace('\n',' ').replace('\r',' ')[:120]
         caption = label+'\n\n'+display_name+': '+text
+        # A deletion after an edit should expose the latest edited text.
+        was_edited = bool(getattr(msg,'edit_date',None))
         has_media = bool(msg.media) and not isinstance(msg.media,types.MessageMediaWebPage)
         if has_media and stage in (1,4):
             if stage == 1:
@@ -437,3 +450,8 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+
+
+
