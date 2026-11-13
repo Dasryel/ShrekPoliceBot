@@ -2,11 +2,12 @@ import asyncio
 from datetime import datetime,timezone
 from pathlib import Path
 import tempfile
+import time
 import unittest
 from unittest.mock import AsyncMock
 from types import SimpleNamespace
 from telethon import types
-from bot_mtproto import Archive,Bot,unpack,classify,restored_poll
+from bot import Archive,Bot,unpack,classify,restored_poll
 
 def message(mid=1,text='hello'):
     return types.Message(id=mid,peer_id=types.PeerChannel(123),date=datetime.now(timezone.utc),message=text)
@@ -72,7 +73,18 @@ class VerificationTests(unittest.IsolatedAsyncioTestCase):
         await self.bot.incoming(event)
         self.assertIsNotNone(self.bot.archive.row(-100999,7))
         self.assertEqual(self.bot.archive.db.execute('SELECT title FROM groups WHERE id=?',(-100999,)).fetchone()[0],'New group')
-    async def test_media_gif_first_original_caption_and_retry(self):
+    async def test_reaction_only_update_does_not_send_or_record_edit_history(self):
+        self.bot.me = SimpleNamespace(id=900)
+        self.bot.archive.remember(-100123,message(8,'unchanged'),sender='@ali',display_name='Ali')
+        event = SimpleNamespace(is_group=True,chat_id=-100123,sender_id=1,
+            message=message(8,'unchanged'),
+            get_chat=AsyncMock(return_value=SimpleNamespace(title='Group')),
+            get_sender=AsyncMock(return_value=SimpleNamespace(bot=False)))
+        self.bot.send = AsyncMock()
+        await self.bot.incoming(event,edit=True)
+        self.bot.send.assert_not_awaited()
+        self.assertEqual(self.bot.archive.edits(-100123,8),[])
+    async def test_media_restores_original_caption_without_reaction_gif(self):
         for original_caption in ('original photo caption',''):
             events = []
             media = message(20,original_caption)
@@ -81,25 +93,43 @@ class VerificationTests(unittest.IsolatedAsyncioTestCase):
             file.write_bytes(b'diagnostic fixture')
             self.bot.archive.remember(-100123,media,str(file),sender='@ali',display_name='Ali')
             self.bot.archive.stage(-100123,20,1)
-            async def gif(chat,caption,extra):
-                events.append(('gif',caption))
             async def send_file(chat,path,**kwargs):
                 events.append(('media',kwargs['caption']))
             async def send(chat,operation):
                 return await operation()
+            gif = AsyncMock()
             self.bot.gif = gif
             self.bot.send = send
             self.bot.client = SimpleNamespace(send_file=send_file)
             await self.bot.restore(-100123,20)
-            self.assertEqual(events[0][0],'gif')
-            self.assertEqual(events[1],('media',original_caption))
-            if not original_caption:
-                self.assertEqual(events[0][1],'Kiinni jäit "@ali",')
-            # After the GIF is acknowledged, retry sends media only.
-            self.bot.archive.stage(-100123,20,4)
-            events.clear()
-            await self.bot.restore(-100123,20)
             self.assertEqual(events,[('media',original_caption)])
+            gif.assert_awaited_once_with(-100123,'Kiinni jäit @ali',{})
+            self.assertEqual(self.bot.archive.row(-100123,20)[2],3)
+    async def test_edit_history_reuses_one_bot_message(self):
+        sent = []
+        edited = []
+        async def send_message(chat, text, **kwargs):
+            sent.append((chat,text))
+            return SimpleNamespace(id=77)
+        async def edit_message(chat, mid, text, **kwargs):
+            edited.append((chat,mid,text))
+        async def send(chat, operation):
+            return await operation()
+        self.bot.send = send
+        self.bot.client = SimpleNamespace(send_message=send_message,edit_message=edit_message)
+        stamp = time.time()
+        self.bot.archive.remember_edit(-100123,1,stamp,'test1')
+        self.bot.archive.remember_edit(-100123,1,stamp + 300,'test2')
+        await self.bot.update_edit_notice(-100123,1,'@ali','Ali')
+        self.assertEqual(len(sent),1)
+        self.assertIn('Kiinni jäi, @ali',sent[0][1])
+        self.assertIn('test1',sent[0][1])
+        self.assertIn('test2',sent[0][1])
+        self.bot.archive.remember_edit(-100123,1,stamp + 360,'test3')
+        await self.bot.update_edit_notice(-100123,1,'@ali','Ali')
+        self.assertEqual(len(sent),1)
+        self.assertEqual(edited[0][1],77)
+        self.assertIn('test3',edited[0][2])
     async def test_webm_upload_keeps_native_sticker_attributes(self):
         msg=message(30,'')
         attrs=[types.DocumentAttributeSticker('🙂',types.InputStickerSetEmpty()),types.DocumentAttributeVideo(1,512,512)]
@@ -108,16 +138,32 @@ class VerificationTests(unittest.IsolatedAsyncioTestCase):
         path.write_bytes(b'test')
         self.bot.archive.remember(-100123,msg,str(path),sender='@ali',display_name='Ali')
         self.bot.archive.stage(-100123,30,1)
-        self.bot.gif=AsyncMock()
         async def send(chat,operation):
             return await operation()
         self.bot.send=send
+        self.bot.gif=AsyncMock()
         self.bot.client=SimpleNamespace(upload_file=AsyncMock(return_value=types.InputFile(1,1,'sticker.webm','')),send_file=AsyncMock())
         await self.bot.restore(-100123,30)
         uploaded=self.bot.client.send_file.call_args.args[1]
         self.assertIsInstance(uploaded,types.InputMediaUploadedDocument)
         self.assertEqual(uploaded.mime_type,'video/webm')
         self.assertEqual([bytes(a) for a in uploaded.attributes],[bytes(a) for a in attrs])
+    async def test_contact_is_restored_as_a_contact(self):
+        msg=message(40,'Call me')
+        msg.media=types.MessageMediaContact('+358401234567','Ali','Example','BEGIN:VCARD\nEND:VCARD',0)
+        self.bot.archive.remember(-100123,msg,sender='@ali',display_name='Ali')
+        self.bot.archive.stage(-100123,40,1)
+        self.bot.gif=AsyncMock()
+        async def send(chat,operation):
+            return await operation()
+        self.bot.send=send
+        self.bot.client=SimpleNamespace(send_file=AsyncMock())
+        await self.bot.restore(-100123,40)
+        contact=self.bot.client.send_file.call_args.args[1]
+        self.assertIsInstance(contact,types.InputMediaContact)
+        self.assertEqual(contact.phone_number,'+358401234567')
+        self.assertEqual(contact.first_name,'Ali')
+        self.assertEqual(contact.last_name,'Example')
 
 if __name__ == '__main__':
     unittest.main()

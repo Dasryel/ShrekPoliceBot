@@ -47,6 +47,9 @@ class Archive:
             self.db.execute('ALTER TABLE messages ADD COLUMN sender TEXT')
         if 'display_name' not in {r[1] for r in self.db.execute('PRAGMA table_info(messages)')}:
             self.db.execute('ALTER TABLE messages ADD COLUMN display_name TEXT')
+        if 'edit_notice' not in {r[1] for r in self.db.execute('PRAGMA table_info(messages)')}:
+            self.db.execute('ALTER TABLE messages ADD COLUMN edit_notice INTEGER')
+        self.db.execute('CREATE TABLE IF NOT EXISTS edits (chat INTEGER, id INTEGER, stamp REAL, text TEXT, PRIMARY KEY(chat,id,stamp))')
         self.db.execute('CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, blob BLOB)')
         self.db.commit()
     def remember(self, chat, message, file=None, sender=None, display_name=None):
@@ -58,6 +61,17 @@ class Archive:
         return self.db.execute('SELECT blob,file,stage FROM messages WHERE chat=? AND id=?',(chat,mid)).fetchone()
     def stage(self, chat, mid, stage, retry=0):
         self.db.execute('UPDATE messages SET stage=?,retry=? WHERE chat=? AND id=?',(stage,retry,chat,mid))
+        self.db.commit()
+    def remember_edit(self, chat, mid, stamp, text):
+        self.db.execute('INSERT OR IGNORE INTO edits(chat,id,stamp,text) VALUES(?,?,?,?)',(chat,mid,stamp,text))
+        self.db.commit()
+    def edits(self, chat, mid):
+        return self.db.execute('SELECT stamp,text FROM edits WHERE chat=? AND id=? ORDER BY stamp',(chat,mid)).fetchall()
+    def edit_notice(self, chat, mid):
+        row = self.db.execute('SELECT edit_notice FROM messages WHERE chat=? AND id=?',(chat,mid)).fetchone()
+        return row[0] if row else None
+    def set_edit_notice(self, chat, mid, notice):
+        self.db.execute('UPDATE messages SET edit_notice=? WHERE chat=? AND id=?',(notice,chat,mid))
         self.db.commit()
 
 class Bot:
@@ -79,8 +93,9 @@ class Bot:
         self.old_cursor = {}
         self.next_old = {}
         self.media_limit = asyncio.Semaphore(2)
+        gif_path = ROOT/self.cfg.get('gif_path','cringe-shrek.gif')
         cached_gif = self.archive.db.execute('SELECT blob FROM meta WHERE key="gif_document"').fetchone()
-        self.gif_hash = hashlib.sha256((ROOT/self.cfg.get('gif_path','cringe-shrek.gif')).read_bytes()).hexdigest()
+        self.gif_hash = hashlib.sha256(gif_path.read_bytes()).hexdigest()
         saved_hash = self.archive.db.execute('SELECT blob FROM meta WHERE key="gif_hash"').fetchone()
         self.gif_media = unpack(cached_gif[0]) if cached_gif and saved_hash and saved_hash[0] == self.gif_hash.encode() else None
         self.excluded = set(config.get('excluded_group_ids', []))
@@ -124,11 +139,16 @@ class Bot:
                 return
             file = None
             previous_text = msg.message or ''
+            old_message = None
             if edit and self.archive.row(event.chat_id,msg.id):
                 # Never attach an older media file to newly edited media.
                 old = self.archive.row(event.chat_id,msg.id)
                 old_message = unpack(old[0])
                 previous_text = old_message.message or ''
+                # Telegram reaction changes can arrive through MessageEdited.
+                # They are not message edits and must not trigger any bot action.
+                if previous_text == (msg.message or '') and old_message.media == msg.media:
+                    return
                 if old_message.media != msg.media:
                     self.archive.db.execute('UPDATE messages SET file=NULL WHERE chat=? AND id=?',(event.chat_id,msg.id))
             name = '@'+sender.username if getattr(sender,'username',None) else utils.get_display_name(sender)
@@ -137,15 +157,12 @@ class Bot:
             log.info('Saved message %s in group %s',msg.id,event.chat_id)
             if msg.photo or msg.document:
                 self.spawn(self.save_media(event.chat_id,msg))
-            if edit:
-                edited_text = previous_text or (msg.message or '')
-                display = (utils.get_display_name(sender) or name).replace('\r',' ').replace('\n',' ')
-                username = name.replace('\r',' ').replace('\n',' ').replace('"',"'")
-                announcement = f'Kiinni jäit "{username}",'
-                if edited_text:
-                    announcement += f'\n\n{display}: {edited_text}'
-                await self.gif(event.chat_id,announcement,{})
-                log.info('Announced edit %s in group %s',msg.id,event.chat_id)
+            if edit and old_message:
+                self.archive.remember_edit(event.chat_id,msg.id,
+                    (getattr(old_message,'edit_date',None) or old_message.date).timestamp(),previous_text)
+                self.archive.remember_edit(event.chat_id,msg.id,
+                    (getattr(msg,'edit_date',None) or msg.date).timestamp(),msg.message or '')
+                await self.update_edit_notice(event.chat_id,msg.id,name,utils.get_display_name(sender) or name)
         except Exception as error:
             log.exception('Incoming message processing failed')
     async def save_media(self, chat, msg):
@@ -164,6 +181,30 @@ class Bot:
                     self.archive.db.commit()
             except Exception as error:
                 log.warning('Media archive failed for %s/%s (%s)',chat,msg.id,type(error).__name__)
+    async def update_edit_notice(self, chat, mid, username, display_name):
+        heading = f'Kiinni jäi, {username}'
+        lines = []
+        for stamp, text in self.archive.edits(chat,mid):
+            time_label = datetime.fromtimestamp(stamp).astimezone().strftime('%H:%M')
+            lines.append(f'{time_label} {display_name}: {text or "[empty message]"}')
+        body = heading + '\n\n' + '\n'.join(lines)
+        # Telegram messages are limited to 4096 characters. Keep the newest
+        # revisions if a long-running message history exceeds that limit.
+        if len(body) > 4096:
+            kept = []
+            remaining = 4096 - len(heading) - len('\n\n[Earlier edits omitted]\n')
+            for line in reversed(lines):
+                if len(line) + (1 if kept else 0) > remaining:
+                    break
+                kept.append(line)
+                remaining -= len(line) + (1 if kept else 0)
+            body = heading + '\n\n[Earlier edits omitted]\n' + '\n'.join(reversed(kept))
+        notice = self.archive.edit_notice(chat,mid)
+        if notice:
+            await self.send(chat,lambda:self.client.edit_message(chat,notice,body,parse_mode=None))
+        else:
+            sent = await self.send(chat,lambda:self.client.send_message(chat,body,parse_mode=None))
+            self.archive.set_edit_notice(chat,mid,sent.id)
     async def read(self, chat, ids):
         async with self.check_lock:
             wait = max(self.next_read,self.blocked)-time.monotonic()
@@ -241,29 +282,13 @@ class Bot:
         thread = getattr(getattr(msg,'reply_to',None),'reply_to_top_id',None)
         extra = {'reply_to':thread} if thread else {}
         text = msg.message or ''
-        saved_name = self.archive.db.execute('SELECT sender,display_name FROM messages WHERE chat=? AND id=?',(chat,mid)).fetchone()
-        name = saved_name[0] if saved_name and saved_name[0] else None
-        display_name = saved_name[1] if saved_name and saved_name[1] else None
-        if not name or not display_name:
-            try:
-                author = await self.client.get_entity(msg.from_id)
-                name = name or ('@'+author.username if getattr(author,'username',None) else utils.get_display_name(author))
-                display_name = display_name or utils.get_display_name(author)
-            except Exception:
-                name = name or f'User {getattr(msg.from_id,"user_id","unknown")}'
-        name = (name or 'Tuntematon').replace('\n',' ').replace('\r',' ').replace('"',"'")[:120]
-        label = f'Kiinni jäit "{name}",'
-        display_name = (display_name or name).replace('\n',' ').replace('\r',' ')[:120]
-        caption = label+'\n\n'+display_name+': '+text
-        # A deletion after an edit should expose the latest edited text.
-        was_edited = bool(getattr(msg,'edit_date',None))
+        saved_sender = self.archive.db.execute('SELECT sender FROM messages WHERE chat=? AND id=?',(chat,mid)).fetchone()
+        caption = f'Kiinni jäit {saved_sender[0] if saved_sender and saved_sender[0] else "Tuntematon"}'
         has_media = bool(msg.media) and not isinstance(msg.media,types.MessageMediaWebPage)
         if has_media and stage in (1,4):
             if stage == 1:
-                gif_caption = caption if text and len(caption.encode('utf-16-le'))//2 <= 1024 else label
-                await self.gif(chat,gif_caption,extra)
-                # Stage 4 records GIF-first progress so a media retry cannot
-                # repeat the GIF after a successful, acknowledged send.
+                await self.gif(chat,caption,extra)
+                # Do not send the GIF twice if the original media upload must retry.
                 self.archive.stage(chat,mid,4)
             if isinstance(msg.media,types.MessageMediaPoll):
                 poll = restored_poll(msg.media)
@@ -285,6 +310,10 @@ class Bot:
                             spoiler=getattr(msg.media,'spoiler',None))
                     return await self.client.send_file(chat,file,caption=text,formatting_entities=msg.entities or [],**extra)
                 await self.send(chat,upload_original)
+            elif isinstance(msg.media,types.MessageMediaContact):
+                contact = types.InputMediaContact(msg.media.phone_number,msg.media.first_name,
+                    msg.media.last_name,msg.media.vcard)
+                await self.send(chat,lambda:self.client.send_file(chat,contact,caption=text,**extra))
             elif msg.photo or msg.document:
                 await self.send(chat,lambda:self.client.send_file(chat,msg.media,caption=text,formatting_entities=msg.entities or [],**extra))
             elif text:
@@ -293,36 +322,32 @@ class Bot:
                 log.warning('Unsupported media for %s/%s; no media copy available',chat,mid)
                 await self.send(chat,lambda:self.client.send_message(chat,'[This message type cannot be restored automatically.]',parse_mode=None,**extra))
             self.archive.stage(chat,mid,3)
-            log.info('Restored GIF then media %s/%s',chat,mid)
+            log.info('Restored media %s/%s',chat,mid)
             return
         if stage == 1:
-            if not msg.media and len(caption.encode('utf-16-le'))//2 <= 1024:
-                await self.gif(chat,caption,extra)
-                self.archive.stage(chat,mid,3)
-                log.info('Restored message and GIF %s/%s',chat,mid)
-                return
             if media_path and Path(media_path).is_file():
-                await self.send(chat,lambda:self.client.send_file(chat,media_path,caption=text or label,formatting_entities=msg.entities or [],**extra))
+                await self.send(chat,lambda:self.client.send_file(chat,media_path,caption=text,formatting_entities=msg.entities or [],**extra))
             elif msg.photo or msg.document:
                 # Stored file references sometimes remain usable after deletion.
                 # If expired, retain the pending row and retry; never claim success.
-                await self.send(chat,lambda:self.client.send_file(chat,msg.media,caption=text or label,parse_mode=None,**extra))
+                await self.send(chat,lambda:self.client.send_file(chat,msg.media,caption=text,parse_mode=None,**extra))
             elif text:
                 await self.send(chat,lambda:self.client.send_message(chat,text,formatting_entities=msg.entities or [],**extra))
             else:
-                await self.send(chat,lambda:self.client.send_message(chat,label+' [This message type cannot be restored automatically.]',**extra))
+                await self.send(chat,lambda:self.client.send_message(chat,'[This message type cannot be restored automatically.]',**extra))
             self.archive.stage(chat,mid,2)
         if stage in (1,2):
-            await self.gif(chat,caption if len(caption.encode('utf-16-le'))//2 <= 1024 else label+'\n\n'+display_name+': (viesti yllä)',extra)
+            await self.gif(chat,caption,extra)
             self.archive.stage(chat,mid,3)
             log.info('Restored %s/%s',chat,mid)
     async def gif(self,chat,caption,extra):
         async def operation():
+            path = str(ROOT/self.cfg.get('gif_path','cringe-shrek.gif'))
             try:
-                return await self.client.send_file(chat,self.gif_media or str(ROOT/self.cfg.get('gif_path','cringe-shrek.gif')),caption=caption,parse_mode=None,**extra)
+                return await self.client.send_file(chat,self.gif_media or path,caption=caption,parse_mode=None,**extra)
             except (errors.FileReferenceExpiredError,errors.FileReferenceInvalidError):
                 self.gif_media = None
-                return await self.client.send_file(chat,str(ROOT/self.cfg.get('gif_path','cringe-shrek.gif')),caption=caption,parse_mode=None,**extra)
+                return await self.client.send_file(chat,path,caption=caption,parse_mode=None,**extra)
         sent = await self.send(chat,operation)
         if sent.document:
             self.gif_media = sent.document
@@ -423,7 +448,7 @@ def main():
     if not all(config.get(k) for k in ('bot_token','api_id','api_hash')):
         raise RuntimeError('Bot and application credentials are missing from config.json')
     if not (ROOT/config.get('gif_path','cringe-shrek.gif')).is_file():
-        raise RuntimeError('Reaction GIF is missing')
+        raise RuntimeError('Shrek GIF is missing')
     lock = open(ROOT/'bot.lock','a+b')
     lock.seek(0,2)
     if lock.tell() == 0:
