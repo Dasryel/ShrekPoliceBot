@@ -84,7 +84,7 @@ class VerificationTests(unittest.IsolatedAsyncioTestCase):
         await self.bot.incoming(event,edit=True)
         self.bot.send.assert_not_awaited()
         self.assertEqual(self.bot.archive.edits(-100123,8),[])
-    async def test_media_restores_original_caption_without_reaction_gif(self):
+    async def test_media_restores_with_timestamped_sender_caption(self):
         for original_caption in ('original photo caption',''):
             events = []
             media = message(20,original_caption)
@@ -97,14 +97,25 @@ class VerificationTests(unittest.IsolatedAsyncioTestCase):
                 events.append(('media',kwargs['caption']))
             async def send(chat,operation):
                 return await operation()
-            gif = AsyncMock()
-            self.bot.gif = gif
             self.bot.send = send
             self.bot.client = SimpleNamespace(send_file=send_file)
             await self.bot.restore(-100123,20)
-            self.assertEqual(events,[('media',original_caption)])
-            gif.assert_awaited_once_with(-100123,'Kiinni jäit @ali',{})
+            self.assertEqual(len(events),1)
+            self.assertRegex(events[0][1],r'^\d{2}:\d{2} Ali: ')
+            self.assertTrue(events[0][1].endswith(original_caption or '[media]'))
             self.assertEqual(self.bot.archive.row(-100123,20)[2],3)
+    async def test_text_restores_with_timestamp_and_sender(self):
+        sent = []
+        self.bot.archive.remember(-100123,message(21,'delete me'),sender='@ali',display_name='Ali')
+        self.bot.archive.stage(-100123,21,1)
+        async def send_message(chat, text, **kwargs):
+            sent.append(text)
+        async def send(chat, operation):
+            return await operation()
+        self.bot.send = send
+        self.bot.client = SimpleNamespace(send_message=send_message)
+        await self.bot.restore(-100123,21)
+        self.assertRegex(sent[0],r'^\d{2}:\d{2} Ali: delete me$')
     async def test_edit_history_reuses_one_bot_message(self):
         sent = []
         edited = []
@@ -141,7 +152,6 @@ class VerificationTests(unittest.IsolatedAsyncioTestCase):
         async def send(chat,operation):
             return await operation()
         self.bot.send=send
-        self.bot.gif=AsyncMock()
         self.bot.client=SimpleNamespace(upload_file=AsyncMock(return_value=types.InputFile(1,1,'sticker.webm','')),send_file=AsyncMock())
         await self.bot.restore(-100123,30)
         uploaded=self.bot.client.send_file.call_args.args[1]
@@ -153,7 +163,6 @@ class VerificationTests(unittest.IsolatedAsyncioTestCase):
         msg.media=types.MessageMediaContact('+358401234567','Ali','Example','BEGIN:VCARD\nEND:VCARD',0)
         self.bot.archive.remember(-100123,msg,sender='@ali',display_name='Ali')
         self.bot.archive.stage(-100123,40,1)
-        self.bot.gif=AsyncMock()
         async def send(chat,operation):
             return await operation()
         self.bot.send=send

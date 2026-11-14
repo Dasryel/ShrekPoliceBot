@@ -8,7 +8,6 @@ import sqlite3
 import time
 import msvcrt
 import os
-import hashlib
 import copy
 
 from telethon import TelegramClient, events, errors, functions, types, utils
@@ -93,11 +92,6 @@ class Bot:
         self.old_cursor = {}
         self.next_old = {}
         self.media_limit = asyncio.Semaphore(2)
-        gif_path = ROOT/self.cfg.get('gif_path','cringe-shrek.gif')
-        cached_gif = self.archive.db.execute('SELECT blob FROM meta WHERE key="gif_document"').fetchone()
-        self.gif_hash = hashlib.sha256(gif_path.read_bytes()).hexdigest()
-        saved_hash = self.archive.db.execute('SELECT blob FROM meta WHERE key="gif_hash"').fetchone()
-        self.gif_media = unpack(cached_gif[0]) if cached_gif and saved_hash and saved_hash[0] == self.gif_hash.encode() else None
         self.excluded = set(config.get('excluded_group_ids', []))
     def spawn(self, coro):
         task = asyncio.create_task(coro)
@@ -282,23 +276,22 @@ class Bot:
         thread = getattr(getattr(msg,'reply_to',None),'reply_to_top_id',None)
         extra = {'reply_to':thread} if thread else {}
         text = msg.message or ''
-        saved_sender = self.archive.db.execute('SELECT sender FROM messages WHERE chat=? AND id=?',(chat,mid)).fetchone()
-        caption = f'Kiinni jäit {saved_sender[0] if saved_sender and saved_sender[0] else "Tuntematon"}'
+        saved_sender = self.archive.db.execute('SELECT display_name,sender FROM messages WHERE chat=? AND id=?',(chat,mid)).fetchone()
+        display_name = saved_sender[0] if saved_sender and saved_sender[0] else (saved_sender[1] if saved_sender and saved_sender[1] else 'Unknown user')
+        timestamp = msg.date.astimezone().strftime('%H:%M')
+        restored_text = f'{timestamp} {display_name}: {text or "[media]"}'
         has_media = bool(msg.media) and not isinstance(msg.media,types.MessageMediaWebPage)
-        if has_media and stage in (1,4):
-            if stage == 1:
-                await self.gif(chat,caption,extra)
-                # Do not send the GIF twice if the original media upload must retry.
-                self.archive.stage(chat,mid,4)
+        if has_media and stage == 1:
             if isinstance(msg.media,types.MessageMediaPoll):
                 poll = restored_poll(msg.media)
                 if poll:
                     await self.send(chat,lambda:self.client.send_file(chat,poll,caption='',**extra))
+                    await self.send(chat,lambda:self.client.send_message(chat,restored_text,parse_mode=None,**extra))
                 else:
                     # Telegram does not disclose an unanswered quiz's correct answer.
                     summary = msg.media.poll.question.text+'\n\n'+'\n'.join(f'{i+1}. {a.text.text}' for i,a in enumerate(msg.media.poll.answers))
                     summary += '\n\n(Quiz restored as text: correct answer unavailable.)'
-                    await self.send(chat,lambda:self.client.send_message(chat,summary,parse_mode=None,**extra))
+                    await self.send(chat,lambda:self.client.send_message(chat,restored_text+'\n\n'+summary,parse_mode=None,**extra))
             elif media_path and Path(media_path).is_file():
                 async def upload_original():
                     file = media_path
@@ -308,52 +301,37 @@ class Bot:
                             mime_type=msg.document.mime_type,
                             attributes=msg.document.attributes,
                             spoiler=getattr(msg.media,'spoiler',None))
-                    return await self.client.send_file(chat,file,caption=text,formatting_entities=msg.entities or [],**extra)
+                    return await self.client.send_file(chat,file,caption=restored_text,formatting_entities=msg.entities or [],**extra)
                 await self.send(chat,upload_original)
             elif isinstance(msg.media,types.MessageMediaContact):
                 contact = types.InputMediaContact(msg.media.phone_number,msg.media.first_name,
                     msg.media.last_name,msg.media.vcard)
-                await self.send(chat,lambda:self.client.send_file(chat,contact,caption=text,**extra))
+                await self.send(chat,lambda:self.client.send_file(chat,contact,caption=restored_text,**extra))
             elif msg.photo or msg.document:
-                await self.send(chat,lambda:self.client.send_file(chat,msg.media,caption=text,formatting_entities=msg.entities or [],**extra))
+                await self.send(chat,lambda:self.client.send_file(chat,msg.media,caption=restored_text,formatting_entities=msg.entities or [],**extra))
             elif text:
-                await self.send(chat,lambda:self.client.send_message(chat,text,formatting_entities=msg.entities or [],**extra))
+                await self.send(chat,lambda:self.client.send_message(chat,restored_text,formatting_entities=msg.entities or [],**extra))
             else:
                 log.warning('Unsupported media for %s/%s; no media copy available',chat,mid)
-                await self.send(chat,lambda:self.client.send_message(chat,'[This message type cannot be restored automatically.]',parse_mode=None,**extra))
+                await self.send(chat,lambda:self.client.send_message(chat,restored_text+' [This message type cannot be restored automatically.]',parse_mode=None,**extra))
             self.archive.stage(chat,mid,3)
             log.info('Restored media %s/%s',chat,mid)
             return
         if stage == 1:
             if media_path and Path(media_path).is_file():
-                await self.send(chat,lambda:self.client.send_file(chat,media_path,caption=text,formatting_entities=msg.entities or [],**extra))
+                await self.send(chat,lambda:self.client.send_file(chat,media_path,caption=restored_text,formatting_entities=msg.entities or [],**extra))
             elif msg.photo or msg.document:
                 # Stored file references sometimes remain usable after deletion.
                 # If expired, retain the pending row and retry; never claim success.
-                await self.send(chat,lambda:self.client.send_file(chat,msg.media,caption=text,parse_mode=None,**extra))
+                await self.send(chat,lambda:self.client.send_file(chat,msg.media,caption=restored_text,parse_mode=None,**extra))
             elif text:
-                await self.send(chat,lambda:self.client.send_message(chat,text,formatting_entities=msg.entities or [],**extra))
+                await self.send(chat,lambda:self.client.send_message(chat,restored_text,formatting_entities=msg.entities or [],**extra))
             else:
-                await self.send(chat,lambda:self.client.send_message(chat,'[This message type cannot be restored automatically.]',**extra))
+                await self.send(chat,lambda:self.client.send_message(chat,restored_text+' [This message type cannot be restored automatically.]',**extra))
             self.archive.stage(chat,mid,2)
         if stage in (1,2):
-            await self.gif(chat,caption,extra)
             self.archive.stage(chat,mid,3)
             log.info('Restored %s/%s',chat,mid)
-    async def gif(self,chat,caption,extra):
-        async def operation():
-            path = str(ROOT/self.cfg.get('gif_path','cringe-shrek.gif'))
-            try:
-                return await self.client.send_file(chat,self.gif_media or path,caption=caption,parse_mode=None,**extra)
-            except (errors.FileReferenceExpiredError,errors.FileReferenceInvalidError):
-                self.gif_media = None
-                return await self.client.send_file(chat,path,caption=caption,parse_mode=None,**extra)
-        sent = await self.send(chat,operation)
-        if sent.document:
-            self.gif_media = sent.document
-            self.archive.db.execute('INSERT OR REPLACE INTO meta VALUES(?,?)',('gif_document',bytes(sent.document)))
-            self.archive.db.execute('INSERT OR REPLACE INTO meta VALUES(?,?)',('gif_hash',self.gif_hash.encode()))
-            self.archive.db.commit()
     async def supervise(self,worker):
         while True:
             try:
@@ -365,7 +343,7 @@ class Bot:
                 await asyncio.sleep(5)
     async def restore_loop(self):
         while True:
-            rows = self.archive.db.execute('SELECT chat,id,stage FROM messages WHERE stage IN(1,2,4) AND retry<=? ORDER BY date LIMIT 1',(time.time(),)).fetchall()
+            rows = self.archive.db.execute('SELECT chat,id,stage FROM messages WHERE stage IN(1,2) AND retry<=? ORDER BY date LIMIT 1',(time.time(),)).fetchall()
             for chat,mid,stage in rows:
                 try:
                     await self.restore(chat,mid)
@@ -447,8 +425,6 @@ def main():
     config = json.loads((ROOT/'config.json').read_text(encoding='utf-8-sig'))
     if not all(config.get(k) for k in ('bot_token','api_id','api_hash')):
         raise RuntimeError('Bot and application credentials are missing from config.json')
-    if not (ROOT/config.get('gif_path','cringe-shrek.gif')).is_file():
-        raise RuntimeError('Shrek GIF is missing')
     lock = open(ROOT/'bot.lock','a+b')
     lock.seek(0,2)
     if lock.tell() == 0:

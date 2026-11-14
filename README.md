@@ -14,7 +14,7 @@ Incoming messages and edits are saved to archive.sqlite3. When a message is edit
 
 Deletion events trigger verification. Batch reads also check the newest 200 saved messages about every two seconds and rotate through older messages in batches every five seconds. Older sweep time grows with the archive. All groups share a paced read queue and server FLOOD_WAIT responses are honored. Exact response timing is not guaranteed.
 
-Two explicit empty reads are required before restoration. Permission, network and incomplete-response failures never count as deletion. Duplicate restoration is suppressed across polling and event paths. When a deleted message is restored, the bot sends the Shrek GIF first and then the restored content; it never responds to emoji reactions. Attribution refers to the original sender; Telegram does not identify who deleted a message. Sending still follows group rate limits, so simultaneous deletions can delay posts.
+Two explicit empty reads are required before restoration. Permission, network and incomplete-response failures never count as deletion. Duplicate restoration is suppressed across polling and event paths. Deleted messages are restored without a GIF, prefixed with the original sender's display name and timestamp (for example, `13:50 Ali: message text`); the bot never responds to emoji reactions. Attribution refers to the original sender; Telegram does not identify who deleted a message. Sending still follows group rate limits, so simultaneous deletions can delay posts.
 
 Archives persist across restarts and are reconciled again. Rows and associated cached files expire 24 hours after the original message date. Pending restoration failures remain available for retry. API sends do not have idempotency keys: a lost acknowledgement or crash between sending and saving progress can produce duplicates. Reconnect and permission problems are logged in mtproto.log.
 
@@ -31,6 +31,6 @@ After changing settings, restart the bot. No hosted service is required: your la
 
 The older forwarding implementation is preserved as bot_forwarding_backup.py. Its PRIVATE forwarding destination is no longer used. Its old messages.sqlite3 archive is preserved separately; the new version starts a fresh archive and does not silently reinterpret that database.
 
-The bot never monitors or responds to emoji reactions. The Shrek GIF is used only when restoring a deleted message and is cached as a Telegram document after its first send.
+The bot never monitors or responds to emoji reactions, and it does not send the Shrek GIF.
 
 
