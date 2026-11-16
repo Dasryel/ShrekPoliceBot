@@ -84,6 +84,20 @@ class VerificationTests(unittest.IsolatedAsyncioTestCase):
         await self.bot.incoming(event,edit=True)
         self.bot.send.assert_not_awaited()
         self.assertEqual(self.bot.archive.edits(-100123,8),[])
+    async def test_reaction_on_media_does_not_send_or_record_edit_history(self):
+        self.bot.me = SimpleNamespace(id=900)
+        original = message(9,'')
+        original.media = types.MessageMediaPhoto(photo=types.PhotoEmpty(id=42))
+        update = message(9,'')
+        update.media = types.MessageMediaPhoto(photo=types.PhotoEmpty(id=42))
+        self.bot.archive.remember(-100123,original,sender='@ali',display_name='Ali')
+        event = SimpleNamespace(is_group=True,chat_id=-100123,sender_id=1,message=update,
+            get_chat=AsyncMock(return_value=SimpleNamespace(title='Group')),
+            get_sender=AsyncMock(return_value=SimpleNamespace(bot=False)))
+        self.bot.send = AsyncMock()
+        await self.bot.incoming(event,edit=True)
+        self.bot.send.assert_not_awaited()
+        self.assertEqual(self.bot.archive.edits(-100123,9),[])
     async def test_media_restores_with_timestamped_sender_caption(self):
         for original_caption in ('original photo caption',''):
             events = []

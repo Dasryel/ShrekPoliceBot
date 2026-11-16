@@ -24,6 +24,20 @@ def classify(ids, messages):
     wanted = set(ids)
     return {m.id for m in messages if isinstance(m, types.MessageEmpty) and m.id in wanted}
 
+def media_identity(media):
+    """Return the stable content identity of media, excluding reaction metadata."""
+    if media is None:
+        return None
+    if isinstance(media, types.MessageMediaPhoto):
+        return ('photo', getattr(media.photo, 'id', None))
+    if isinstance(media, types.MessageMediaDocument):
+        return ('document', getattr(media.document, 'id', None))
+    if isinstance(media, types.MessageMediaPoll):
+        return ('poll', getattr(media.poll, 'id', None))
+    if isinstance(media, types.MessageMediaContact):
+        return ('contact', media.phone_number, media.first_name, media.last_name, media.vcard)
+    return (type(media).__name__, bytes(media))
+
 def restored_poll(media):
     poll = copy.deepcopy(media.poll)
     poll.id = poll.hash = 0
@@ -141,9 +155,9 @@ class Bot:
                 previous_text = old_message.message or ''
                 # Telegram reaction changes can arrive through MessageEdited.
                 # They are not message edits and must not trigger any bot action.
-                if previous_text == (msg.message or '') and old_message.media == msg.media:
+                if previous_text == (msg.message or '') and media_identity(old_message.media) == media_identity(msg.media):
                     return
-                if old_message.media != msg.media:
+                if media_identity(old_message.media) != media_identity(msg.media):
                     self.archive.db.execute('UPDATE messages SET file=NULL WHERE chat=? AND id=?',(event.chat_id,msg.id))
             name = '@'+sender.username if getattr(sender,'username',None) else utils.get_display_name(sender)
             name = name or f'User {event.sender_id}'
